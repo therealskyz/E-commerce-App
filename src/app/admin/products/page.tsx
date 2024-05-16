@@ -11,8 +11,13 @@ import {
 } from "@/components/ui/table";
 import prisma from "@/db/db";
 import { CheckCircle2, MoreVertical, XCircle } from "lucide-react";
-import { format } from "path";
 import { formatCurrency, formatNumber } from "@/lib/formatter";
+import {
+  DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuItem,
+  DropdownMenuContent,
+} from "@/components/ui/dropdown-menu";
 
 export default function AdminProductsPage() {
   return (
@@ -83,8 +88,24 @@ async function ProductsTable() {
             <TableCell>{formatCurrency(product.priceInCents / 100)}</TableCell>
             <TableCell>{formatNumber(product._count.order)}</TableCell>
             <TableCell>
-              <MoreVertical />
-              <span className="sr-only">Actions</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <MoreVertical />
+                  <span className="sr-only">Actions</span>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem>
+                    <a download href={`/admin/products/${product.id}/download`}>
+                      Download
+                    </a>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <Link href={`/admin/products/${product.id}/edit`}>
+                      Edit
+                    </Link>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </TableCell>
           </TableRow>
         ))}
