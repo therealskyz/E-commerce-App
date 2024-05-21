@@ -10,14 +10,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import prisma from "@/db/db";
-import { CheckCircle2, MoreVertical, XCircle } from "lucide-react";
+import { CheckCircle2, Delete, MoreVertical, XCircle } from "lucide-react";
 import { formatCurrency, formatNumber } from "@/lib/formatter";
 import {
   DropdownMenuTrigger,
   DropdownMenu,
   DropdownMenuItem,
   DropdownMenuContent,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {
+  ActiveToggleDropdownItem,
+  DeleteDropdownItem,
+} from "../_components/ProductActions";
 
 export default function AdminProductsPage() {
   return (
@@ -80,7 +85,7 @@ async function ProductsTable() {
               ) : (
                 <>
                   <span className="sr-only">Unavailable</span>
-                  <XCircle />
+                  <XCircle className="stroke-desctructive" />
                 </>
               )}
             </TableCell>
@@ -91,7 +96,6 @@ async function ProductsTable() {
               <DropdownMenu>
                 <DropdownMenuTrigger>
                   <MoreVertical />
-                  <span className="sr-only">Actions</span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem>
@@ -104,6 +108,15 @@ async function ProductsTable() {
                       Edit
                     </Link>
                   </DropdownMenuItem>
+                  <ActiveToggleDropdownItem
+                    id={product.id}
+                    isAvailableForPurchase={product.isAvailableForPurchase}
+                  />
+                  <DropdownMenuSeparator />
+                  <DeleteDropdownItem
+                    id={product.id}
+                    disabled={product._count.order > 0}
+                  />
                 </DropdownMenuContent>
               </DropdownMenu>
             </TableCell>

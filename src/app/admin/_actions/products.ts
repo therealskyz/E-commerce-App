@@ -3,7 +3,7 @@
 
 import prisma from "@/db/db";
 import fs from "fs/promises";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
 const fileSchema = z.instanceof(File, { message: "Required" });
@@ -73,4 +73,17 @@ export async function toggleProductAvailability(
       isAvailableForPurchase,
     },
   });
+}
+
+export async function deleteProduct(id: string) {
+  const product = await prisma.product.delete({
+    where: {
+      id,
+    },
+  });
+
+  if (product == null) return notFound();
+
+  await fs.unlink(product.filePath);
+  await fs.unlink(`public${product.imagePath}`);
 }

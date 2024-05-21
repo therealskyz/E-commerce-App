@@ -42,5 +42,5 @@ prisma/dev.db
 prisma/dev.db-journal
 
 # e-commerce-app products and images
-public
-products
+/public
+/public/products
