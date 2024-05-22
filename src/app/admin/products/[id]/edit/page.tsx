@@ -14,6 +14,7 @@ export default async function EditProductPage({ params: { id } }: Props) {
       id: id,
     },
   });
+
   return (
     <>
       <PageHeader>Edit Product</PageHeader>
