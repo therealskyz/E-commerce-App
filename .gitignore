@@ -43,4 +43,4 @@ prisma/dev.db-journal
 
 # e-commerce-app products and images
 /public
-/public/products
+/products
