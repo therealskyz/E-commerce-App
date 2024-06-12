@@ -1,25 +1,30 @@
 import { ProductCard } from "@/components/ProductCard";
 import { Button } from "@/components/ui/button";
 import prisma from "@/db/db";
+import { cache } from "@/lib/cache";
 import { Product } from "@prisma/client";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
-function getMostPopularProducts() {
-  return prisma.product.findMany({
-    where: {
-      isAvailableForPurchase: true,
-    },
-    orderBy: {
-      order: {
-        _count: "desc",
+const getMostPopularProducts = cache(
+  () => {
+    return prisma.product.findMany({
+      where: {
+        isAvailableForPurchase: true,
       },
-    },
-    take: 6,
-  });
-}
+      orderBy: {
+        order: {
+          _count: "desc",
+        },
+      },
+      take: 6,
+    });
+  },
+  ["/", "getMostPopularProducts"], // unique identifier for each database call.
+  { revalidate: 60 * 60 * 24 } // every 24hrs it will invalidate the cache and get a new value for it.
+);
 
-function getNewestProducts() {
+const getNewestProducts = cache(() => {
   return prisma.product.findMany({
     where: {
       isAvailableForPurchase: true,
@@ -28,7 +33,7 @@ function getNewestProducts() {
       createdAt: "desc",
     },
   });
-}
+}, ["/", "getNewestProducts"]);
 
 interface ProductGridSectionProps {
   title: string;

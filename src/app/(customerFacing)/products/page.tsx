@@ -1,8 +1,8 @@
 import { ProductCard } from "@/components/ProductCard";
 import prisma from "@/db/db";
-import { Product } from "@prisma/client";
+import { cache } from "@/lib/cache";
 
-function getProducts() {
+const getProducts = cache(() => {
   return prisma.product.findMany({
     where: {
       isAvailableForPurchase: true,
@@ -11,7 +11,7 @@ function getProducts() {
       name: "asc",
     },
   });
-}
+}, ["/products", "getProducts"]);
 
 export default async function ProductsPage() {
   const products = await getProducts();
