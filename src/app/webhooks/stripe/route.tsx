@@ -1,12 +1,14 @@
-import prisma from "@/db/db";
 import { NextRequest, NextResponse } from "next/server";
-import { Resend } from "resend";
 import Stripe from "stripe";
+import { Resend } from "resend";
+import prisma from "@/db/db";
+//import PurchaseReceiptEmail from "@/email/PurchaseReceipt";
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY as string);
 const resend = new Resend(process.env.RESEND_API_KEY as string);
 
 export async function POST(req: NextRequest) {
+  console.log("webhook hit");
   const event = await stripe.webhooks.constructEvent(
     await req.text(),
     req.headers.get("stripe-signature") as string,
@@ -16,50 +18,33 @@ export async function POST(req: NextRequest) {
   if (event.type === "charge.succeeded") {
     const charge = event.data.object;
     const productId = charge.metadata.product;
-    const email = charge.metadata.email;
+    const email = charge.billing_details.email;
     const pricePaidInCents = charge.amount;
 
     const product = await prisma.product.findUnique({
-      where: {
-        id: productId,
-      },
+      where: { id: productId },
     });
-
     if (product == null || email == null) {
       return new NextResponse("Bad Request", { status: 400 });
     }
 
     const userFields = {
-      email: email,
-      orders: {
-        create: {
-          productId: productId,
-          pricePaidInCents: pricePaidInCents,
-        },
-      },
+      email,
+      orders: { create: { productId, pricePaidInCents } },
     };
 
     const {
       orders: [order],
     } = await prisma.user.upsert({
-      where: {
-        email: email,
-      },
+      where: { email },
       create: userFields,
       update: userFields,
-      select: {
-        orders: {
-          orderBy: {
-            createdAt: "desc",
-          },
-          take: 1,
-        },
-      },
+      select: { orders: { orderBy: { createdAt: "desc" }, take: 1 } },
     });
 
     const downloadVerification = await prisma.downloadVerification.create({
       data: {
-        productId: productId,
+        productId,
         expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
       },
     });
