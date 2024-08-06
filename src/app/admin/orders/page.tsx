@@ -6,7 +6,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { formatCurrency, formatNumber } from "@/lib/formatter";
+import prisma from "@/db/db";
+import { formatCurrency } from "@/lib/formatter";
 import PageHeader from "../_components/PageHeader";
 import {
   DropdownMenu,
@@ -14,56 +15,53 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreVertical } from "lucide-react";
-import { DeleteDropDownItem } from "./_components/UserActions";
-import prisma from "@/db/db";
+import { DeleteDropDownItem } from "./_components/OrderActions";
 
-function getUsers() {
-  return prisma.user.findMany({
+function getOrders() {
+  return prisma.order.findMany({
     select: {
       id: true,
-      email: true,
-      orders: { select: { pricePaidInCents: true } },
+      pricePaidInCents: true,
+      product: { select: { name: true } },
+      user: { select: { email: true } },
     },
     orderBy: { createdAt: "desc" },
   });
 }
 
-export default function UsersPage() {
+export default function OrdersPage() {
   return (
     <>
-      <PageHeader>Customers</PageHeader>
-      <UsersTable />
+      <PageHeader>Sales</PageHeader>
+      <OrdersTable />
     </>
   );
 }
 
-async function UsersTable() {
-  const users = await getUsers();
+async function OrdersTable() {
+  const orders = await getOrders();
 
-  if (users.length === 0) return <p>No customers found</p>;
+  if (orders.length === 0) return <p>No sales found</p>;
 
   return (
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>Email</TableHead>
-          <TableHead>Orders</TableHead>
-          <TableHead>Value</TableHead>
+          <TableHead>Product</TableHead>
+          <TableHead>Customer</TableHead>
+          <TableHead>Price Paid</TableHead>
           <TableHead className="w-0">
             <span className="sr-only">Actions</span>
           </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
-        {users.map((user) => (
-          <TableRow key={user.id}>
-            <TableCell>{user.email}</TableCell>
-            <TableCell>{formatNumber(user.orders.length)}</TableCell>
+        {orders.map((order) => (
+          <TableRow key={order.id}>
+            <TableCell>{order.product.name}</TableCell>
+            <TableCell>{order.user.email}</TableCell>
             <TableCell>
-              {formatCurrency(
-                user.orders.reduce((sum, o) => o.pricePaidInCents + sum, 0) /
-                  100
-              )}
+              {formatCurrency(order.pricePaidInCents / 100)}
             </TableCell>
             <TableCell className="text-center">
               <DropdownMenu>
@@ -72,7 +70,7 @@ async function UsersTable() {
                   <span className="sr-only">Actions</span>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
-                  <DeleteDropDownItem id={user.id} />
+                  <DeleteDropDownItem id={order.id} />
                 </DropdownMenuContent>
               </DropdownMenu>
             </TableCell>
